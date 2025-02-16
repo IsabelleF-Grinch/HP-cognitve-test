@@ -46,8 +46,10 @@ export function useDrawingCanvas() {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const [currentShapeIndex, setCurrentShapeIndex] = useState(0);
     const canvasInstance = useRef<Canvas | null>(null);
+    const [mouseData, setMouseData] = useState<{ x: number; y: number; time: number }[]>([]);
+    const [startTime, setStartTime] = useState<number | null>(null);
+    const [analysisResult, setAnalysisResult] = useState<string | null>(null);
 
-    // Fonction pour afficher la forme courante
     const displayShape = useCallback(() => {
         if (!canvasInstance.current) return;
         canvasInstance.current.clear();
@@ -72,7 +74,6 @@ export function useDrawingCanvas() {
         }
     }, [currentShapeIndex]);
 
-    // Initialisation du canvas
     useEffect(() => {
         if (canvasRef.current && !canvasInstance.current) {
             canvasInstance.current = new Canvas(canvasRef.current, {
@@ -80,10 +81,22 @@ export function useDrawingCanvas() {
                 backgroundColor: "white",
             });
 
-            // Configuration du pinceau
-            canvasInstance.current.freeDrawingBrush = new PencilBrush(canvasInstance.current);
-            canvasInstance.current.freeDrawingBrush.width = 2;
-            canvasInstance.current.freeDrawingBrush.color = "black";
+            const canvas = canvasInstance.current;
+            canvas.freeDrawingBrush = new PencilBrush(canvas);
+            canvas.freeDrawingBrush.width = 2;
+            canvas.freeDrawingBrush.color = "black";
+
+            canvas.on("mouse:move", (event) => {
+                const pointer = canvas.getPointer(event.e);
+                setMouseData((prev) => [
+                    ...prev,
+                    { x: pointer.x, y: pointer.y, time: Date.now() },
+                ]);
+            });
+
+            canvas.on("mouse:down", () => {
+                if (!startTime) setStartTime(Date.now());
+            });
         }
 
         displayShape();
@@ -93,12 +106,31 @@ export function useDrawingCanvas() {
                 canvasInstance.current.clear();
             }
         };
-    }, [displayShape]);
+    }, [displayShape, startTime]);
 
-    // Fonction pour passer à la forme suivante
     const nextShape = () => {
         setCurrentShapeIndex((prev) => (prev < shapes.length - 1 ? prev + 1 : prev));
     };
 
-    return { canvasRef, nextShape };
+    const sendData = async () => {
+        if (mouseData.length > 0 && startTime) {
+            const interactionTime = Date.now() - startTime;
+            const payload = { mouseData, interactionTime };
+
+            try {
+                const response = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload),
+                });
+
+                const data = await response.json();
+                setAnalysisResult(data.result);
+            } catch (error) {
+                console.error("Erreur d'envoi des données :", error);
+            }
+        }
+    };
+
+    return { canvasRef, nextShape, sendData, analysisResult };
 }

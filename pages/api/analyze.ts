@@ -1,0 +1,44 @@
+import { NextApiRequest, NextApiResponse } from "next";
+import { spawn } from "child_process";
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+    console.log("✅ API analyze.ts appelée !");
+
+    if (req.method === "POST") {
+        const { mouseData, interactionTime } = req.body;
+
+        console.log("📊 Données reçues :", JSON.stringify(req.body));
+
+        try {
+            const pythonProcess = spawn("python3", ["scripts/detect_anomalies.py", JSON.stringify(mouseData), interactionTime.toString()]);
+
+            let result = "";
+            let errorMessage = "";
+
+            pythonProcess.stdout.on("data", (data) => {
+                result += data.toString();
+            });
+
+            pythonProcess.stderr.on("data", (data) => {
+                errorMessage += data.toString();
+                console.error("❌ Erreur Python :", errorMessage);
+            });
+
+            pythonProcess.on("close", (code) => {
+                console.log("📌 Processus Python terminé avec code :", code);
+
+                if (code !== 0 || errorMessage) {
+                    return res.status(500).json({ error: "Erreur d'analyse", details: errorMessage });
+                }
+
+                res.status(200).json({ result: result.trim() });
+            });
+
+        } catch (error) {
+            console.error("🚨 Erreur API :", error);
+            res.status(500).json({ error: "Erreur du serveur" });
+        }
+    } else {
+        res.status(405).json({ error: "Méthode non autorisée" });
+    }
+}

@@ -10,6 +10,17 @@
 !.yarn/releases
 !.yarn/versions
 
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+*.dist-info/
+Pipfile
+Pipfile.lock
+poetry.lock
+
 # testing
 /coverage
 

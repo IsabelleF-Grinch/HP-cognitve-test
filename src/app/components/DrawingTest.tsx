@@ -1,9 +1,8 @@
 "use client";
-
 import { useDrawingCanvas } from "../hooks/useDrawingCanvas";
 
 export default function DrawingTest() {
-  const { canvasRef, nextShape } = useDrawingCanvas();
+  const { canvasRef, nextShape, sendData, analysisResult } = useDrawingCanvas();
 
   return (
     <div
@@ -47,19 +46,43 @@ export default function DrawingTest() {
           />
         </div>
       </div>
-      <button
-        onClick={nextShape}
-        style={{
-          marginTop: "1rem",
-          padding: "0.5rem 1rem",
-          backgroundColor: "#3b82f6",
-          color: "white",
-          borderRadius: "0.375rem",
-          border: "none",
-        }}
-      >
-        Forme suivante
-      </button>
+      <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
+        <button
+          onClick={nextShape}
+          style={{
+            padding: "0.5rem 1rem",
+            backgroundColor: "#3b82f6",
+            color: "white",
+            borderRadius: "0.375rem",
+            border: "none",
+          }}
+        >
+          Forme suivante
+        </button>
+        <button
+          onClick={sendData}
+          style={{
+            padding: "0.5rem 1rem",
+            backgroundColor: "#ef4444",
+            color: "white",
+            borderRadius: "0.375rem",
+            border: "none",
+          }}
+        >
+          Envoyer le dessin
+        </button>
+      </div>
+      {analysisResult && (
+        <p
+          style={{
+            marginTop: "1rem",
+            fontWeight: "bold",
+            color: analysisResult.includes("Bot") ? "red" : "green",
+          }}
+        >
+          {analysisResult}
+        </p>
+      )}
     </div>
   );
 }
