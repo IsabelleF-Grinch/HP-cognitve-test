@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { spawn } from "child_process";
+import path from "path";
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
     console.log("✅ API analyze.ts appelée !");
@@ -10,7 +11,17 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
         console.log("📊 Données reçues :", JSON.stringify(req.body));
 
         try {
-            const pythonProcess = spawn("python3", ["scripts/detect_anomalies.py", JSON.stringify(mouseData), interactionTime.toString()]);
+            // Chemin absolu vers le script Python
+            const scriptPath = path.join(process.cwd(), "scripts", "detect_anomalies.py");
+
+            // Vérifie l'environnement virtuel
+            const pythonExecutable = path.join(process.cwd(), "venv", "bin", "python3");
+
+            const pythonProcess = spawn(pythonExecutable, [
+                scriptPath,
+                JSON.stringify(mouseData),
+                interactionTime.toString()
+            ]);
 
             let result = "";
             let errorMessage = "";

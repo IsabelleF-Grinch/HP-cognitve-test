@@ -117,6 +117,8 @@ export function useDrawingCanvas() {
             const interactionTime = Date.now() - startTime;
             const payload = { mouseData, interactionTime };
 
+            console.log("📤 Envoi des données :", payload);
+
             try {
                 const response = await fetch("/api/analyze", {
                     method: "POST",
@@ -125,9 +127,10 @@ export function useDrawingCanvas() {
                 });
 
                 const data = await response.json();
+                console.log("📥 Réponse API :", data);
                 setAnalysisResult(data.result);
             } catch (error) {
-                console.error("Erreur d'envoi des données :", error);
+                console.error("❌ Erreur d'envoi des données :", error);
             }
         }
     };

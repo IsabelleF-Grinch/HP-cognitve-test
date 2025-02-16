@@ -22,12 +22,15 @@ features = np.array([
     [interaction_time, speed, speed_variability] for speed in mouse_speeds
 ])
 
-# print("\n📌 **Données Reçues** :", mouse_data)
-# print("📌 **Nombre de points** :", len(mouse_data))
-# print("📌 **Features calculées** :", features)
-# print("📌 **Longueur de features** :", len(features))
+# 🔹 **Suppression des doublons**
+features = np.unique(features, axis=0)
 
-# 🔹 **Dataset d'entraînement : Comportements humains & bots**
+print("📌 Données reçues :", mouse_data)
+print("📌 Nombre de points :", len(mouse_data))
+print("📌 Features calculées :", features)
+print("📌 Longueur de features :", len(features))
+
+# 🔹 **Dataset d'entraînement**
 training_data = np.array([
     # Humains : mouvements progressifs et réalistes
     [300, 1.2, 0.15], [320, 1.5, 0.2], [290, 0.8, 0.18], [310, 1.1, 0.22],
@@ -40,7 +43,7 @@ training_data = np.array([
 
 # 🔹 **Modèles de détection**
 iso_forest = IsolationForest(contamination=0.1, random_state=42)
-lof = LocalOutlierFactor(n_neighbors=5, contamination=0.15)
+lof = LocalOutlierFactor(n_neighbors=min(10, len(training_data) - 1), contamination=0.15)
 
 # 🔹 **Entraînement des modèles**
 iso_forest.fit(training_data)
@@ -51,14 +54,17 @@ if len(features) < 2:
     print("⚠️ **Pas assez de données pour LOF, analyse ignorée.**")
     lof_result = 1  # On considère par défaut que c'est un humain
 else:
-    lof_result = lof.fit_predict(features)[0]
+    try:
+        lof_result = lof.fit_predict(features)[0]
+    except ValueError as e:
+        print("❌ Erreur LOF :", str(e))
+        lof_result = 1  # Sécurité pour éviter un crash
 
 # 🔹 **Prédiction d'anomalies**
 iso_result = iso_forest.predict(features)[0]
 
 # 🔹 **Détection finale**
 anomaly_detected = (iso_result == 1 and lof_result == 1) if len(features) >= 2 else (iso_result == 1)
-
 
 # 🔹 **Résultat final**
 result = "✅ **Humain détecté**" if not anomaly_detected else "🚨 **Bot détecté**"
