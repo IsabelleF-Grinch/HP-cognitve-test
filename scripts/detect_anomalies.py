@@ -22,33 +22,44 @@ features = np.array([
     [interaction_time, speed, speed_variability] for speed in mouse_speeds
 ])
 
+# print("\n📌 **Données Reçues** :", mouse_data)
+# print("📌 **Nombre de points** :", len(mouse_data))
+# print("📌 **Features calculées** :", features)
+# print("📌 **Longueur de features** :", len(features))
 
-print("📌 Données reçues :", mouse_data)
-print("📌 Nombre de points :", len(mouse_data))
-print("📌 Features calculées :", features)
-print("📌 Longueur de features :", len(features))
+# 🔹 **Dataset d'entraînement : Comportements humains & bots**
+training_data = np.array([
+    # Humains : mouvements progressifs et réalistes
+    [300, 1.2, 0.15], [320, 1.5, 0.2], [290, 0.8, 0.18], [310, 1.1, 0.22],
+    [330, 1.3, 0.19], [340, 1.4, 0.17], [350, 1.0, 0.16], [360, 1.2, 0.14],
 
+    # Bots : vitesse constante et comportement trop parfait
+    [500, 2.5, 0.01], [500, 2.4, 0.02], [500, 2.6, 0.01], [500, 2.3, 0.03],
+    [500, 2.7, 0.02], [500, 2.8, 0.01], [500, 2.9, 0.02], [500, 3.0, 0.01]
+])
 
-# **Modèles de détection**
+# 🔹 **Modèles de détection**
 iso_forest = IsolationForest(contamination=0.1, random_state=42)
+lof = LocalOutlierFactor(n_neighbors=5, contamination=0.15)
+
+# 🔹 **Entraînement des modèles**
+iso_forest.fit(training_data)
+lof.fit(training_data)
 
 # 🔹 **Gestion du cas où il y a trop peu de données**
 if len(features) < 2:
-    print("⚠️ Pas assez de données pour LOF, analyse ignorée.")
+    print("⚠️ **Pas assez de données pour LOF, analyse ignorée.**")
     lof_result = 1  # On considère par défaut que c'est un humain
 else:
-    n_neighbors = min(20, max(1, len(features) - 1))
-    lof = LocalOutlierFactor(n_neighbors=n_neighbors)
     lof_result = lof.fit_predict(features)[0]
 
-# **Simuler un dataset d'entraînement (à remplacer par un vrai dataset)**
-dataset = np.random.rand(200, 3)  
-iso_forest.fit(dataset)
-
-# **Exécution de l'algorithme seulement si LOF a été défini**
+# 🔹 **Prédiction d'anomalies**
 iso_result = iso_forest.predict(features)[0]
-anomaly_detected = (iso_result == -1 or lof_result == -1) if len(features) >= 2 else (iso_result == -1)
 
-# **Résultat**
-result = "Bot détecté" if anomaly_detected else "Humain détecté"
-print(result)
+# 🔹 **Détection finale**
+anomaly_detected = (iso_result == 1 and lof_result == 1) if len(features) >= 2 else (iso_result == 1)
+
+
+# 🔹 **Résultat final**
+result = "✅ **Humain détecté**" if not anomaly_detected else "🚨 **Bot détecté**"
+print("\n🔎 **Résultat final :**", result)
