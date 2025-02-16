@@ -117,8 +117,6 @@ export function useDrawingCanvas() {
             const interactionTime = Date.now() - startTime;
             const payload = { mouseData, interactionTime };
 
-            console.log("📤 Envoi des données :", payload);
-
             try {
                 const response = await fetch("/api/analyze", {
                     method: "POST",
@@ -127,10 +125,14 @@ export function useDrawingCanvas() {
                 });
 
                 const data = await response.json();
-                console.log("📥 Réponse API :", data);
-                setAnalysisResult(data.result);
+
+                // ✅ Log toutes les données dans la console
+                console.log("📌 **Données complètes reçues de l'API :**", data.fullResult);
+
+                // ✅ Afficher uniquement "Bot détecté" ou "Humain détecté" dans l'interface
+                setAnalysisResult(data.detection);
             } catch (error) {
-                console.error("❌ Erreur d'envoi des données :", error);
+                console.error("Erreur d'envoi des données :", error);
             }
         }
     };

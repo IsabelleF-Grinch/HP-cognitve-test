@@ -42,7 +42,13 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
                     return res.status(500).json({ error: "Erreur d'analyse", details: errorMessage });
                 }
 
-                res.status(200).json({ result: result.trim() });
+                const responseData = {
+                    fullResult: result.trim(),  // ✅ Tout le résultat brut
+                    detection: result.includes("Humain détecté") ? "✅ Humain détecté" : "🚨 Bot détecté", // ✅ Juste le résultat final
+                };
+
+                res.status(200).json(responseData);
+                // res.status(200).json({ result: result.trim() });
             });
 
         } catch (error) {
