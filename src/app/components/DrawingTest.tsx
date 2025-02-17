@@ -1,5 +1,6 @@
 "use client";
 import { useDrawingCanvas } from "../hooks/useDrawingCanvas";
+import Heatmap from "./Heatmap";
 
 export default function DrawingTest() {
   const { canvasRef, nextShape, sendData, analysisResult } = useDrawingCanvas();
@@ -83,6 +84,7 @@ export default function DrawingTest() {
           {analysisResult}
         </p>
       )}
+      <Heatmap />
     </div>
   );
 }
